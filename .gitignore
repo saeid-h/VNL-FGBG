@@ -1,0 +1,75 @@
+*.pyc
+checkpoints
+*.ckpt
+events.out.*
+.idea
+
+# compilation and distribution
+__pycache__
+_ext
+*.pyc
+*.so
+dmb.egg-info/
+build/
+dist/
+*.py[cod]
+*$py.class
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# pytorch/python/numpy formats
+*.pth
+*.pkl
+*.npy
+
+# ipython/jupyter notebooks
+*.ipynb
+**/.ipynb_checkpoints/
+
+# Editor temporaries
+*.swn
+*.swo
+*.swp
+*~
+
+# Pycharm editor settings
+.idea
+
+# vscode editor settings
+.vscode
+
+# MacOS
+.DS_Store
+
+# Enviroments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+py3-*/
+.vscode/
+VNL/
+
+# Folders to data and checkpoints
+pretrained/
+datasets/
+models/
