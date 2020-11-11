@@ -9,6 +9,7 @@ import math
 import traceback
 from tools.parse_arg_train import TrainOptions
 from tools.parse_arg_val import ValOptions
+from lib.models.image_transfer import resize_image
 
 logger = setup_logging(__name__)
 
