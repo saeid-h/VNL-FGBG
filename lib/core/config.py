@@ -110,7 +110,8 @@ def print_configs(cfg):
             message += '{:>50}: \n'.format(name1)
             for k_, v_ in kv.items():
                 name2 = '.'.join([name1, k_])
-                message += '{:>50}: {:<30}\n'.format(str(name2), str(v_))
+                if not type(v_) in [type([]), type(np.ndarray(1))]:
+                    message += '{:>50}: {:<30}\n'.format(str(name2), str(v_))
         else:
             message += '{:>50}: {:<30}\n'.format(k, kv)
 
