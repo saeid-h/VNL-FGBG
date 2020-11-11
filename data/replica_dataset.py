@@ -25,8 +25,8 @@ class ReplicaDataset():
         self.depth_paths.sort()
         n = int(0.9*len(self.image_paths))
         if opt.phase == 'train':
-            self.image_paths = self.image_paths[:-n]
-            self.depth_paths = self.depth_paths[:-n]
+            self.image_paths = self.image_paths[:n]
+            self.depth_paths = self.depth_paths[:n]
         elif opt.phase == 'val':
             self.image_paths = self.image_paths[n:]
             self.depth_paths = self.depth_paths[n:]
