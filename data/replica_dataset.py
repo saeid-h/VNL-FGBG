@@ -16,6 +16,7 @@ class ReplicaDataset():
     def initialize(self, opt):
         self.opt = opt
         self.root = opt.dataroot
+        self.depth_normalize = 10.
         self.dir_image = os.path.join(cfg.ROOT_DIR, opt.dataroot, 'image_left')
         self.dir_depth = os.path.join(cfg.ROOT_DIR, opt.dataroot, 'depth_left')
         self.image_paths = self.getListOfFiles(self.dir_image, '*.png')
@@ -29,6 +30,7 @@ class ReplicaDataset():
         elif opt.phase == 'val':
             self.image_paths = self.image_paths[n:]
             self.depth_paths = self.depth_paths[n:]
+        logger.info('Loaded Replica data!')
         self.data_size = len(self.image_paths)
         self.uniform_size = (512, 512)
         self.TAG_FLOAT = 202021.25
@@ -55,29 +57,6 @@ class ReplicaDataset():
                 allFiles += self.getListOfFiles(fullPath, mask)
         return allFiles
 
-    # def getData(self):
-    #     image_list = self.getListOfFiles(self.dir_image, '*.png')
-    #     depth_list = self.getListOfFiles(self.dir_depth, '*.dpt')
-
-    #     # with open(self.dir_anno, 'r') as load_f:
-    #     #     AB_anno = json.load(load_f)
-        
-    #     # print ("=========================================", AB_anno[0])
-    #     # if 'dir_AB' in AB_anno[0].keys():
-    #     #     self.dir_AB = os.path.join(cfg.ROOT_DIR, self.opt.dataroot, self.opt.phase_anno, AB_anno[0]['dir_AB'])
-    #     #     AB = sio.loadmat(self.dir_AB)
-    #     #     self.A = AB['rgbs']
-    #     #     self.B = AB['depths']
-    #     #     # self.depth_normalize = 10.0
-    #     # else:
-    #     #     self.A = None
-    #     #     self.B = None
-    #     # A_list = [os.path.join(cfg.ROOT_DIR, self.opt.dataroot, self.opt.phase_anno, AB_anno[i]['rgb_path']) for i in range(len(AB_anno))]
-    #     # B_list = [os.path.join(cfg.ROOT_DIR, self.opt.dataroot, self.opt.phase_anno, AB_anno[i]['depth_path']) for i in range(len(AB_anno))]
-    #     # logger.info('Loaded NYUDV2 data!')
-    #     return image_list, depth_list
-
-
     def __getitem__(self, index):
         data = self.online_aug(index)
         return data
@@ -92,18 +71,8 @@ class ReplicaDataset():
         B_path = self.depth_paths[index]
 
         A = cv2.imread(A_path)
-        B = self.depth_read(B_path)
+        B = self.depth_read(B_path) / self.depth_normalize
         A = A[:, :, ::-1].copy() #rgb -> bgr
-
-        # if self.A is None:
-        #     A = cv2.imread(A_path)  # bgr, H*W*C
-        #     B = cv2.imread(B_path, -1) / self.depth_normalize  # the max depth is 10m
-        # else:
-        #     A = self.A[anno_index]  # C*W*H
-        #     B = self.B[anno_index] / self.depth_normalize # the max depth is 10m
-        #     A = A.transpose((2, 1, 0))  # H * W * C
-        #     B = B.transpose((1, 0))  # H * W
-        #     A = A[:, :, ::-1].copy() #rgb -> bgr
 
         flip_flg, crop_size, pad, resize_ratio = self.set_flip_pad_reshape_crop()
 
@@ -136,13 +105,11 @@ class ReplicaDataset():
         flip_prob = np.random.uniform(0.0, 1.0)
         flip_flg = True if flip_prob > 0.5 and 'train' in self.opt.phase else False
 
-        # raw_size = np.array([cfg.DATASET.CROP_SIZE[1], 416, 448, 480, 512, 544, 576, 608, 640])
         raw_size = np.array([cfg.DATASET.CROP_SIZE[1], 416, 448, 480, 512])
         size_index = np.random.randint(0, 5) if 'train' in self.opt.phase else 4
 
         # pad
-        pad_height = raw_size[size_index] - self.uniform_size[0] if raw_size[size_index] > self.uniform_size[0]\
-                    else 0
+        pad_height = raw_size[size_index] - self.uniform_size[0] if raw_size[size_index] > self.uniform_size[0] else 0
         pad = [pad_height, 0, 0, 0]  # [up, down, left, right]
 
         # crop
