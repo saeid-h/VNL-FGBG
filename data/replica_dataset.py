@@ -71,7 +71,7 @@ class ReplicaDataset():
         B_path = self.depth_paths[index]
 
         A = cv2.imread(A_path)
-        B = np.clip(self.depth_read(B_path) / self.depth_normalize, min=0.0, max=1.0)
+        B = np.clip(self.depth_read(B_path) / self.depth_normalize, 0.0, 1.0)
         A = A[:, :, ::-1].copy() #rgb -> bgr
 
         flip_flg, crop_size, pad, resize_ratio = self.set_flip_pad_reshape_crop()
