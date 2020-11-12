@@ -22,12 +22,12 @@ DATASET:
   RGB_PIXEL_MEANS: (0.485, 0.456, 0.406)  # (102.9801, 115.9465, 122.7717)
   RGB_PIXEL_VARS: (0.229, 0.224, 0.225)  # (1, 1, 1)
   # Scale the depth map
-  DEPTH_SCALE: 1.0
+  DEPTH_SCALE: 10.0
   CROP_SIZE: (385, 385)  # (height, width)
   # Minimum depth after data augmentation
   DEPTH_MIN: 0.01
   # Maximum depth
-  DEPTH_MAX: 10.
+  DEPTH_MAX: 1.7
   FOCAL_Y: 300.0
   FOCAL_X: 300.0
 
