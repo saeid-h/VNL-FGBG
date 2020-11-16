@@ -117,7 +117,7 @@ class ReplicaDataset():
                 int(self.uniform_size[0] - crop_height) + 1)
         crop_size = [start_x, start_y, crop_height, crop_width]
 
-        resize_ratio = float(cfg.DATASET.CROP_SIZE[1] / crop_width)
+        resize_ratio = float(cfg.DATASET.CROP_SIZE[1] / crop_width) if 'train' in self.phase else 1
 
         return flip_flg, crop_size, pad, resize_ratio
 
@@ -131,6 +131,8 @@ class ReplicaDataset():
         :param pad_value: padding value
         :return:
         """
+        if self.phase == 'test':
+            return img
         # Flip
         if flip:
             img = np.flip(img, axis=1)
@@ -147,6 +149,7 @@ class ReplicaDataset():
 
         # Resize the raw image
         img_resize = cv2.resize(img_crop, (cfg.DATASET.CROP_SIZE[1], cfg.DATASET.CROP_SIZE[0]), interpolation=cv2.INTER_LINEAR)
+        
         return img_resize
 
     def depth_to_bins(self, depth):
