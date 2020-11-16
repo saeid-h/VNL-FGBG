@@ -69,9 +69,13 @@ if __name__ == '__main__':
     model.cuda()
     model = torch.nn.DataParallel(model)
 
-    with open('lists/nyudepthv2_test_files_with_gt.txt', 'r') as f:
-        lines = f.readlines()
-    name_dict = {line.split()[0].split('_')[-1].split('.')[0]: line.split()[0].replace(os.path.sep, '_') for line in lines}
+    with open(test_args.file_list, 'r') as f:
+            lines = f.readlines()
+    img_names = [line.split()[0].replace(os.sep, '_') for line in lines]
+    img_names.sort()
+    # with open('lists/replica_test_files_with_gt.txt', 'r') as f:
+    #     lines = f.readlines()
+    # name_dict = {line.split()[0].split('_')[-1].split('.')[0]: line.split()[0].replace(os.path.sep, '_') for line in lines}
 
     model_name = test_args.load_ckpt.split('/')[-1].split('.')[0]
     outpath = os.path.join('results', model_name)
@@ -86,15 +90,8 @@ if __name__ == '__main__':
 
     for i, data in enumerate(data_loader):
         out = model.module.inference(data)
-        pred_depth = torch.squeeze(out['b_fake'])
-        img_path = data['A_paths']
-        invalid_side = data['invalid_side'][0]
-        pred_depth = pred_depth[invalid_side[0]:pred_depth.size(0) - invalid_side[1], :]
-        pred_depth = pred_depth / data['ratio'].cuda() # scale the depth
-        pred_depth = resize_image(pred_depth, torch.squeeze(data['B_raw']).shape)
-        
-        img_number = '0' + img_path[0].split(os.path.sep)[-1].split('_')[1]
-        img_name = name_dict[img_number].replace('.jpg', '.png')
+        pred_depth = torch.squeeze(out['b_fake']).cpu().numpy()
+        img_name = img_names[i]
 
         gt = data['B_raw'].cpu().numpy().squeeze()
 

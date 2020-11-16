@@ -17,19 +17,17 @@ class ReplicaDataset():
         self.opt = opt
         self.root = opt.dataroot
         self.depth_normalize = 10.
-        self.dir_image = os.path.join(cfg.ROOT_DIR, opt.dataroot, 'image_left')
-        self.dir_depth = os.path.join(cfg.ROOT_DIR, opt.dataroot, 'depth_left')
-        self.image_paths = self.getListOfFiles(self.dir_image, '*.png')
-        self.image_paths.sort()
-        self.depth_paths = self.getListOfFiles(self.dir_depth, '*.dpt')
-        self.depth_paths.sort()
+        self.get_image_depth_list()
+        self.phase = opt.phase
         n = int(0.9*len(self.image_paths))
-        if opt.phase == 'train':
+        if self.phase == 'train':
             self.image_paths = self.image_paths[:n]
             self.depth_paths = self.depth_paths[:n]
-        elif opt.phase == 'val':
+        elif self.phase == 'val':
             self.image_paths = self.image_paths[n:]
             self.depth_paths = self.depth_paths[n:]
+        elif self.phase == 'test':
+            pass
         logger.info('Loaded Replica data!')
         self.data_size = len(self.image_paths)
         self.uniform_size = (512, 512)
@@ -48,19 +46,18 @@ class ReplicaDataset():
         depth = np.fromfile(f,dtype=np.float32,count=-1).reshape((height,width))
         return depth
 
-    def getListOfFiles(self, dirName, mask='*.png'):
-        listOfFile = os.listdir(dirName+os.sep) 
-        allFiles = glob.glob(dirName+mask)
-        for entry in listOfFile:
-            fullPath = os.path.join(dirName, entry) + os.sep
-            if os.path.isdir(fullPath):
-                allFiles += self.getListOfFiles(fullPath, mask)
-        return allFiles
-
+    def get_image_depth_list(self):
+        with open(self.opt.file_list, 'r') as f:
+           lines = f.readlines()
+        self.image_paths = [os.path.join(cfg.ROOT_DIR, self.root, 'image_left',line.split()[0]) for line in lines]
+        self.depth_paths = [os.path.join(cfg.ROOT_DIR, self.root, 'depth_left',line.split()[1]) for line in lines]
+        self.image_paths.sort()
+        self.depth_paths.sort()
+    
     def __getitem__(self, index):
-        data = self.online_aug(index)
-        return data
+        return self.online_aug(index)
 
+    
     def online_aug(self, index):
         """
         Augment data for training online randomly. The invalid parts in the depth map are set to -1.0, while the parts
@@ -72,7 +69,6 @@ class ReplicaDataset():
 
         A = cv2.imread(A_path)
         B = self.depth_read(B_path) / self.depth_normalize
-        # B = np.clip(self.depth_read(B_path) / self.depth_normalize, 0.0, 1.0)
         A = A[:, :, ::-1].copy() #rgb -> bgr
 
         flip_flg, crop_size, pad, resize_ratio = self.set_flip_pad_reshape_crop()
@@ -104,10 +100,10 @@ class ReplicaDataset():
         """
         # flip
         flip_prob = np.random.uniform(0.0, 1.0)
-        flip_flg = True if flip_prob > 0.5 and 'train' in self.opt.phase else False
+        flip_flg = True if flip_prob > 0.5 and 'train' in self.phase else False
 
         raw_size = np.array([cfg.DATASET.CROP_SIZE[1], 416, 448, 480, 512])
-        size_index = np.random.randint(0, 5) if 'train' in self.opt.phase else 4
+        size_index = np.random.randint(0, 5) if 'train'  in self.phase else 4
 
         # pad
         pad_height = raw_size[size_index] - self.uniform_size[0] if raw_size[size_index] > self.uniform_size[0] else 0
